@@ -368,6 +368,7 @@ namespace PHEnergyCorrelator {
           Tools::GetCstLorentz(csts.second, jet.pt, false)
         );
 
+	/*
         // get average of cst 3-vectors
         TVector3 vecAvgCst3 = Tools::GetWeightedAvgVector(
           vecCst4.first.Vect(),
@@ -379,6 +380,20 @@ namespace PHEnergyCorrelator {
           vecCst4.second.Vect(),
           true
         );
+	*/
+
+	// get the difference of the two constituent momentum vectors
+	// (using old names for expedience although I probably shouldn't....)
+	// consistently subtract the smaller momentum particle from the larger
+
+	TVector3 vecAvgCst3; 
+	if(vecCst4.first.Vect().Mag()>=vecCst4.second.Vect().Mag()) {
+	  vecAvgCst3 = vecCst4.first.Vect() - vecCst4.second.Vect(); 
+	}
+	else{
+	  vecAvgCst3 = vecCst4.second.Vect() - vecCst4.first.Vect(); 
+	}
+	TVector3 unitAvgCst3 = vecAvgCst3.Unit(); 
 
         // collins & boer-mulders angle calculations --------------------------
 

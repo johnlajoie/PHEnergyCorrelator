@@ -802,7 +802,7 @@ void jetAnaSim(int runno=12, float R = 0.3, int embed = 0, float centLow = 0.0, 
   // --------------------------------------------------------------------------
 
 // define flags to turn off certain calculations
-#define doTrueEEC 1
+#define doTrueEEC 0
 #define doTrueEECChargedOnly 0
 #define doRecoEEC 1
 #define doRecoEECChargedOnly 0
@@ -1203,6 +1203,9 @@ void jetAnaSim(int runno=12, float R = 0.3, int embed = 0, float centLow = 0.0, 
   TString oSuffix = Suffix; 
   if(AcceptFlag==0) oSuffix = "_Arm0" + Suffix; 
   if(AcceptFlag==1) oSuffix = "_Arm1" + Suffix; 
+  
+  if(doRecoEEC) oSuffix += "_RecoEEC"; 
+  if(doTrueEEC) oSuffix += "_TrueEEC"; 
 
   TString HalfString = ""; 
   if(halfstats==1) HalfString = "_half"; 
