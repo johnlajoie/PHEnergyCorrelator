@@ -368,7 +368,11 @@ namespace PHEnergyCorrelator {
           Tools::GetCstLorentz(csts.second, jet.pt, false)
         );
 
+       
 	/*
+
+	// Collins/Boer-Mulders Analysis
+	  
         // get average of cst 3-vectors
         TVector3 vecAvgCst3 = Tools::GetWeightedAvgVector(
           vecCst4.first.Vect(),
@@ -382,18 +386,70 @@ namespace PHEnergyCorrelator {
         );
 	*/
 
-	// get the difference of the two constituent momentum vectors
-	// (using old names for expedience although I probably shouldn't....)
-	// consistently subtract the smaller momentum particle from the larger
+	// Dihadron FF Analysis
 
-	TVector3 vecAvgCst3; 
-	if(vecCst4.first.Vect().Mag()>=vecCst4.second.Vect().Mag()) {
-	  vecAvgCst3 = vecCst4.first.Vect() - vecCst4.second.Vect(); 
-	}
-	else{
-	  vecAvgCst3 = vecCst4.second.Vect() - vecCst4.first.Vect(); 
-	}
-	TVector3 unitAvgCst3 = vecAvgCst3.Unit(); 
+        // (0) get beam and spin directions
+        //   first  = blue beam/spin
+        //   second = yellow beam/spin
+        std::pair<TVector3, TVector3> vecBeam3 = Tools::GetBeams();
+        std::pair<TVector3, TVector3> vecSpin3 = Tools::GetSpins( jet.pattern );
+
+	// Define the vectors for the angle calculations
+
+	TVector3 PC = vecCst4.first.Vect() + vecCst4.second.Vect();
+	TVector3 PC_unit = PC.Unit(); 
+	TVector3 RC = 0.5*(vecCst4.first.Vect() - vecCst4.second.Vect());
+	
+	// blue beam is PB, yellow is PA
+
+	TVector3 PB = vecBeam3.first;
+	TVector3 PB_unit = PB.Unit();
+	TVector3 SB = vecSpin3.first; 
+
+	TVector3 PA = vecBeam3.second;
+	TVector3 PA_unit = PA.Unit(); 
+	TVector3 SA = vecSpin3.second; 
+	
+	// Blue Polarized
+
+	double cThetaSB = (PB_unit.Cross(PC)*(1.0/(PB_unit.Cross(PC).Mag()))).Dot(PB_unit.Cross(SB)*(1.0/PB_unit.Cross(SB).Mag())); 
+	double sThetaSB = (PC.Cross(SB)).Dot(PB_unit)*(1.0/((PB_unit.Cross(PC).Mag())*(PB_unit.Cross(SB).Mag()))); 
+
+	// Yellow Polarized
+
+	double cThetaSA = (PA_unit.Cross(PC)*(1.0/(PA_unit.Cross(PC).Mag()))).Dot(PA_unit.Cross(SA)*(1.0/PA_unit.Cross(SA).Mag())); 
+	double sThetaSA = (PC.Cross(SA)).Dot(PA_unit)*(1.0/((PA_unit.Cross(PC).Mag())*(PA_unit.Cross(SA).Mag()))); 
+
+	// Dihadron
+
+	double cThetaRC = (PC_unit.Cross(PA)*(1.0/(PC_unit.Cross(PA).Mag()))).Dot(PC_unit.Cross(RC)*(1.0/PC_unit.Cross(RC).Mag())); 
+	double sThetaRC = (PA.Cross(RC)).Dot(PC_unit)*(1.0/((PC_unit.Cross(PA).Mag())*(PC_unit.Cross(RC).Mag()))); 
+
+	// Convert to angles in the full range [0,2pi]
+
+	double ThetaSB = (sThetaSB>0.0) ? acos(cThetaSB) : -acos(cThetaSB); 
+	if (ThetaSB < 0)               ThetaSB += TMath::TwoPi();
+	if (ThetaSB >= TMath::TwoPi()) ThetaSB -= TMath::TwoPi();
+
+	double ThetaSA = (sThetaSA>0.0) ? acos(cThetaSA) : -acos(cThetaSA); 
+	if (ThetaSA < 0)               ThetaSA += TMath::TwoPi();
+	if (ThetaSA >= TMath::TwoPi()) ThetaSA -= TMath::TwoPi();
+
+	double ThetaRC = (sThetaRC>0.0) ? acos(cThetaRC) : -acos(cThetaRC);
+	if (ThetaRC < 0)               ThetaRC += TMath::TwoPi();
+	if (ThetaRC >= TMath::TwoPi()) ThetaRC -= TMath::TwoPi();
+
+	// The angle differences in the full range [0,2pi]
+
+	double ThetaSB_RC = ThetaSB - ThetaRC; 
+	if (ThetaSB_RC < 0)               ThetaSB_RC += TMath::TwoPi();
+	if (ThetaSB_RC >= TMath::TwoPi()) ThetaSB_RC -= TMath::TwoPi();
+
+	double ThetaSA_RC = ThetaSA - ThetaRC; 
+	if (ThetaSA_RC < 0)               ThetaSA_RC += TMath::TwoPi();
+	if (ThetaSA_RC >= TMath::TwoPi()) ThetaSA_RC -= TMath::TwoPi();
+	
+	/*
 
         // collins & boer-mulders angle calculations --------------------------
 
@@ -473,6 +529,8 @@ namespace PHEnergyCorrelator {
 	if (phiBoerYell < 0)               phiBoerYell += TMath::TwoPi();
 	if (phiBoerYell >= TMath::TwoPi()) phiBoerYell -= TMath::TwoPi();
  
+	*/
+
         // calculate eec quantities -------------------------------------------
 
         // get EEC weights
@@ -493,6 +551,9 @@ namespace PHEnergyCorrelator {
           // grab hist indices
           std::vector<Type::HistIndex> indices = GetHistIndices(jet);
 
+	  // Collins/Boer-Mulders
+
+	  /*
           // collect quantities to be histogrammed
           Type::HistContent content(weight, dist);
           if (m_manager.GetDoSpinBins()) {
@@ -500,6 +561,21 @@ namespace PHEnergyCorrelator {
             content.phiCollY = phiCollYell;
             content.phiBoerB = phiBoerBlue;
             content.phiBoerY = phiBoerYell;
+            content.spinB    = vecSpin3.first.Y();
+            content.spinY    = vecSpin3.second.Y();
+            content.pattern  = jet.pattern;
+          }
+	  */
+
+	  // Dihadron FF
+
+          // collect quantities to be histogrammed
+          Type::HistContent content(weight, dist);
+          if (m_manager.GetDoSpinBins()) {
+            content.phiCollB = ThetaSB_RC;
+            content.phiCollY = ThetaSA_RC;
+            content.phiBoerB = 0.0;
+            content.phiBoerY = 0.0;
             content.spinB    = vecSpin3.first.Y();
             content.spinY    = vecSpin3.second.Y();
             content.pattern  = jet.pattern;

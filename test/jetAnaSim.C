@@ -802,9 +802,9 @@ void jetAnaSim(int runno=12, float R = 0.3, int embed = 0, float centLow = 0.0, 
   // --------------------------------------------------------------------------
 
 // define flags to turn off certain calculations
-#define doTrueEEC 0
+#define doTrueEEC 1
 #define doTrueEECChargedOnly 0
-#define doRecoEEC 1
+#define doRecoEEC 0
 #define doRecoEECChargedOnly 0
 
 // define flags to turn on/off certain binnings
